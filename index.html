@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سلطهٔ جهانی — بازی کارتی نبرد ملت‌ها</title>
+
+  <!-- فونت فارسی Vazirmatn -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;900&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ============================================================= -->
+  <!-- نوار بالا: عنوان، نشانگر نوبت، شمارنده دسته، دکمه‌ها           -->
+  <!-- ============================================================= -->
+  <header class="topbar">
+    <div class="title-block">
+      <h1 class="game-title">World Dominion</h1>
+      <p class="subtitle">نبرد ملت‌ها — یک نبرد کارتیِ دونفره</p>
+    </div>
+
+    <div class="status-block">
+      <div class="status-chip" id="turnIndicator">
+        <span class="chip-label">نوبت</span>
+        <span class="chip-value" id="turnValue">بازیکن ۱</span>
+      </div>
+      <div class="status-chip">
+        <span class="chip-label">دسته</span>
+        <span class="chip-value" id="deckCount">۰</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="endTurnBtn" class="btn btn-secondary">پایان نوبت</button>
+      <button id="rulesBtn" class="btn btn-ghost">قوانین بازی</button>
+      <button id="restartBtn" class="btn btn-ghost">شروع دوباره</button>
+    </div>
+  </header>
+
+  <!-- خط راهنمای کوتاه که در طول بازی به‌روز می‌شود -->
+  <p class="hint" id="hint">در حال بارگذاری جهان&hellip;</p>
+
+  <!-- ============================================================= -->
+  <!-- صفحهٔ بازی                                                    -->
+  <!-- ============================================================= -->
+  <main class="board" id="board" aria-hidden="false">
+
+    <!-- بازیکن ۲ در بالای صفحه -->
+    <section class="player-area p2" id="area-1">
+      <div class="player-header">
+        <div class="player-id">
+          <span class="player-badge">۲</span>
+          <div>
+            <h2 class="player-name" id="name-1">بازیکن ۲</h2>
+            <span class="player-tag">فرماندهی شمال</span>
+          </div>
+        </div>
+        <div class="player-stats">
+          <div class="stat">
+            <span class="stat-num" id="score-1">۰</span>
+            <span class="stat-lbl">امتیاز</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="capcount-1">۰</span>
+            <span class="stat-lbl">تسخیرشده</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hand-label" id="handlabel-1">دست</div>
+      <div class="hand" id="hand-1"></div>
+
+      <div class="captured-label">کشورهای تسخیرشده</div>
+      <div class="captured" id="captured-1"></div>
+    </section>
+
+    <!-- میدان نبرد در مرکز -->
+    <section class="battle-area" id="battleArea">
+      <div class="battle-stage">
+        <div class="battle-slot" id="slot-attacker">
+          <span class="slot-tag">مهاجم</span>
+          <div class="slot-card" id="slot-attacker-card"></div>
+        </div>
+
+        <div class="battle-center">
+          <div class="vs-mark">نبرد</div>
+        </div>
+
+        <div class="battle-slot" id="slot-defender">
+          <span class="slot-tag">مدافع</span>
+          <div class="slot-card" id="slot-defender-card"></div>
+        </div>
+      </div>
+
+      <!-- گزارش نبرد: همیشه توضیح می‌دهد چه پاداش‌هایی اعمال شده -->
+      <div class="battle-log" id="battleLog">یک مهاجم و سپس یک مدافع انتخاب کنید.</div>
+    </section>
+
+    <!-- بازیکن ۱ در پایین صفحه -->
+    <section class="player-area p1" id="area-0">
+      <div class="player-header">
+        <div class="player-id">
+          <span class="player-badge">۱</span>
+          <div>
+            <h2 class="player-name" id="name-0">بازیکن ۱</h2>
+            <span class="player-tag">فرماندهی جنوب</span>
+          </div>
+        </div>
+        <div class="player-stats">
+          <div class="stat">
+            <span class="stat-num" id="score-0">۰</span>
+            <span class="stat-lbl">امتیاز</span>
+          </div>
+          <div class="stat">
+            <span class="stat-num" id="capcount-0">۰</span>
+            <span class="stat-lbl">تسخیرشده</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hand-label" id="handlabel-0">دست</div>
+      <div class="hand" id="hand-0"></div>
+
+      <div class="captured-label">کشورهای تسخیرشده</div>
+      <div class="captured" id="captured-0"></div>
+    </section>
+  </main>
+
+  <!-- ============================================================= -->
+  <!-- پنجره‌ها: بارگذاری، خطا، برنده، قوانین                        -->
+  <!-- ============================================================= -->
+  <div class="overlay" id="loadingOverlay">
+    <div class="overlay-card">
+      <div class="globe-spinner" aria-hidden="true"></div>
+      <h2>در حال ترسیم نقشهٔ جهان</h2>
+      <p>گردآوری ملت‌ها از سراسر جهان&hellip;</p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="errorOverlay">
+    <div class="overlay-card">
+      <div class="error-mark" aria-hidden="true">!</div>
+      <h2>نقشه‌ها گم شده‌اند</h2>
+      <p id="errorMsg">دسترسی به اطلاعات جهانی ممکن نشد. اتصال اینترنت را بررسی کن و دوباره تلاش کن.</p>
+      <button id="retryBtn" class="btn btn-primary">تلاش دوباره</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="winnerOverlay">
+    <div class="overlay-card winner-card">
+      <span class="winner-crown" aria-hidden="true">&#9733;</span>
+      <h2 class="winner-title" id="winnerTitle">بازیکن ۱ برنده شد!</h2>
+      <p class="winner-reason" id="winnerReason"></p>
+      <div class="final-scores">
+        <div class="final-col">
+          <span class="final-name" id="final-name-0">بازیکن ۱</span>
+          <span class="final-score" id="final-score-0">۰</span>
+          <span class="final-sub" id="final-cap-0">۰ تسخیرشده</span>
+        </div>
+        <div class="final-divider"></div>
+        <div class="final-col">
+          <span class="final-name" id="final-name-1">بازیکن ۲</span>
+          <span class="final-score" id="final-score-1">۰</span>
+          <span class="final-sub" id="final-cap-1">۰ تسخیرشده</span>
+        </div>
+      </div>
+      <button id="playAgainBtn" class="btn btn-primary">شروع دوباره</button>
+    </div>
+  </div>
+
+  <!-- نوار اعلامِ «کارت جدیدِ تو» -->
+  <div class="new-card-toast hidden" id="newCardToast"></div>
+
+  <!-- پنجرهٔ قوانین / راهنمای بازی -->
+  <div class="overlay hidden" id="rulesOverlay">
+    <div class="overlay-card rules-card">
+      <button class="rules-close" id="rulesClose" aria-label="بستن">&times;</button>
+      <h2>راهنمای بازی</h2>
+      <p class="rules-tagline">World Dominion — نبرد ملت‌ها</p>
+
+      <div class="rules-body">
+
+        <h3>نوع بازی</h3>
+        <p>«سلطهٔ جهانی» یک بازی کارتیِ نبرد کشورها برای ۲ بازیکن است. هر دو بازیکن روی یک دستگاه و به‌نوبت بازی می‌کنند.</p>
+
+        <h3>هدف بازی</h3>
+        <p>با رسیدن به یکی از این شرط‌ها برنده می‌شوی:</p>
+        <ul>
+          <li>رسیدن به <b>۱۰ امتیاز</b></li>
+          <li>تسخیر <b>۱۰ کشور</b></li>
+          <li>یا وقتی دسته خالی شود و یک بازیکن کارتی در دست نداشته باشد، بازیکنی که امتیاز بیشتری دارد برنده است.</li>
+        </ul>
+
+        <h3>اجزای هر کارت</h3>
+        <p>هر کارت کشور شامل این موارد است: پرچم، نام کشور، پایتخت، منطقه، جمعیت و قدرت.</p>
+
+        <h3>قدرت</h3>
+        <p>قدرت هر کشور بر اساس جمعیتش محاسبه می‌شود. فرمول:</p>
+        <p><code>power = Math.floor(Math.log10(population))</code></p>
+        <ul>
+          <li>جمعیت ۱٬۰۰۰٬۰۰۰ = قدرت ۶</li>
+          <li>جمعیت ۱۰٬۰۰۰٬۰۰۰ = قدرت ۷</li>
+          <li>جمعیت ۱۰۰٬۰۰۰٬۰۰۰ = قدرت ۸</li>
+        </ul>
+
+        <h3>آماده‌سازی</h3>
+        <ul>
+          <li>بازی فهرست کشورها را از REST Countries API بارگذاری می‌کند.</li>
+          <li>کارت‌ها بُر می‌خورند و یک دسته تشکیل می‌شود.</li>
+          <li>هر بازیکن ۵ کارت کشور می‌گیرد.</li>
+          <li>بازیکن ۱ شروع‌کننده است.</li>
+          <li>هر دو بازیکن با ۰ امتیاز آغاز می‌کنند.</li>
+        </ul>
+
+        <h3>ساختار هر نوبت</h3>
+        <ul>
+          <li><b>۱. کارتِ خودکار:</b> در شروعِ هر نوبت، یک کارت به‌طور خودکار از دسته به بازیکن داده می‌شود و با پیامِ «کارت جدیدِ تو» اعلام می‌گردد (دیگر دکمهٔ کشیدن کارت وجود ندارد).</li>
+          <li><b>۲. حمله:</b> یک کارت از دستِ خودت را به‌عنوان مهاجم انتخاب کن.</li>
+          <li><b>۳. هدف:</b> یک کارت از دستِ حریف را به‌عنوان مدافع انتخاب کن.</li>
+          <li><b>۴. نبرد:</b> بازی قدرتِ مهاجم و مدافع را پس از اعمالِ پاداش‌ها مقایسه می‌کند.</li>
+          <li><b>۵. پایان:</b> پس از حل نبرد، نوبت خودکار به بازیکن دیگر می‌رسد. با دکمهٔ «پایان نوبت» هم می‌توانی بدون حمله نوبت را واگذار کنی.</li>
+        </ul>
+        <p>هر دو بازیکن روی یک دستگاه و کنار هم بازی می‌کنند؛ کارت‌های هر دو طرف رو هستند.</p>
+
+        <h3>پاداش منطقه</h3>
+        <p>کشورهای هم‌منطقه از هم پشتیبانی می‌کنند:</p>
+        <ul>
+          <li>اگر <b>۲ کارت یا بیشتر</b> از منطقهٔ مهاجم در دستت داشته باشی، مهاجم <b>+۱ قدرت</b> می‌گیرد.</li>
+          <li>اگر <b>۳ کارت یا بیشتر</b> داشته باشی، مهاجم <b>+۲ قدرت</b> می‌گیرد.</li>
+          <li>مدافع هم دقیقاً همین پاداش را بر اساس دستِ حریف می‌گیرد.</li>
+        </ul>
+        <p><i>مثال:</i> اگر بازیکن ۱ با آلمان حمله کند و ۳ کارت اروپایی در دست داشته باشد، آلمان +۲ قدرت می‌گیرد.</p>
+
+        <h3>توانایی پایتخت</h3>
+        <p>پایتخت هر کشور بر اساس <b>حرف اولش</b> یک توانایی ویژه می‌دهد:</p>
+        <ul>
+          <li><b>A تا F:</b> اگر این کارت مهاجم باشد، +۱ قدرت حمله می‌گیرد.</li>
+          <li><b>G تا L:</b> اگر این کارت مدافع باشد، +۱ قدرت دفاع می‌گیرد.</li>
+          <li><b>M تا R:</b> صاحب این کارت پس از نبرد ۱ کارت اضافه می‌کشد.</li>
+          <li><b>S تا Z:</b> اگر این کارت در نبرد برنده شود، صاحبش +۱ امتیاز اضافه می‌گیرد.</li>
+          <li><b>بدون پایتخت:</b> هیچ توانایی ندارد.</li>
+        </ul>
+
+        <h3>حل نبرد</h3>
+        <p>قدرت نهاییِ هر طرف چنین محاسبه می‌شود:</p>
+        <ul>
+          <li>قدرت نهایی مهاجم = قدرت پایه + پاداش منطقه + پاداش حملهٔ پایتخت</li>
+          <li>قدرت نهایی مدافع = قدرت پایه + پاداش منطقه + پاداش دفاعِ پایتخت</li>
+        </ul>
+        <p><b>اگر قدرت نهایی مهاجم بیشتر باشد:</b></p>
+        <ul>
+          <li>مهاجم برنده می‌شود.</li>
+          <li>کارت مدافع از دست حریف حذف می‌شود.</li>
+          <li>کارت مدافع به کشورهای تسخیرشدهٔ مهاجم اضافه می‌شود.</li>
+          <li>مهاجم +۱ امتیاز می‌گیرد.</li>
+          <li>اگر مهاجم توانایی پایتخت S–Z داشته باشد، +۱ امتیاز اضافه می‌گیرد.</li>
+        </ul>
+        <p><b>اگر قدرت نهایی مدافع مساوی یا بیشتر باشد:</b></p>
+        <ul>
+          <li>مدافع برنده می‌شود.</li>
+          <li>هر دو کارت در دست صاحبانشان می‌مانند.</li>
+          <li>مدافع +۱ امتیاز می‌گیرد.</li>
+          <li>اگر مدافع توانایی S–Z داشته باشد، +۱ امتیاز اضافه می‌گیرد.</li>
+        </ul>
+
+        <h3>چگونه محاسبه می‌شود؟ (مثالِ کامل)</h3>
+        <p>قدرتِ پایه از روی جمعیت به دست می‌آید: <code>power = floor(log10(جمعیت))</code>. سپس پاداش‌ها اضافه می‌شوند.</p>
+        <p>فرض کن <b>ترکیه (پایتخت Ankara)</b> به <b>آلمان (پایتخت Berlin)</b> حمله می‌کند. توجه: هر دو پایتخت با حرفِ بازهٔ A–F شروع می‌شوند، پس هر دو «کشور مهاجم ⚔️» هستند و پاداشِ حمله می‌دهند.</p>
+        <ul>
+          <li>جمعیت ترکیه ≈ ۸۵ میلیون ← قدرتِ پایه = floor(log10(۸۵٬۰۰۰٬۰۰۰)) = <b>۷</b></li>
+          <li>جمعیت آلمان ≈ ۸۳ میلیون ← قدرتِ پایه = <b>۷</b></li>
+        </ul>
+        <p><b>مهاجم (ترکیه):</b></p>
+        <ul>
+          <li>قدرت پایه: ۷</li>
+          <li>پاداش منطقه: اگر مهاجم ۲ کارتِ آسیایی در دست داشته باشد ← +۱</li>
+          <li>پاداش حملهٔ پایتخت: Ankara حرف A دارد (+۱) و Berlin هم A–F است (+۱) ← مجموع +۲ به قدرتِ حملهٔ مهاجم</li>
+          <li><b>قدرت نهایی مهاجم = ۷ + ۱ + ۲ = ۱۰</b></li>
+        </ul>
+        <p><b>مدافع (آلمان):</b></p>
+        <ul>
+          <li>قدرت پایه: ۷</li>
+          <li>پاداش منطقه: اگر حریف ۲ کارتِ اروپایی داشته باشد ← +۱</li>
+          <li>پاداش دفاعِ پایتخت: هیچ‌کدام از دو پایتخت در بازهٔ G–L نیستند ← +۰</li>
+          <li><b>قدرت نهایی مدافع = ۷ + ۱ + ۰ = ۸</b></li>
+        </ul>
+        <p><b>نتیجه:</b> ۱۰ از ۸ بیشتر است، پس ترکیه می‌برد و آلمان را تسخیر می‌کند و +۱ امتیاز می‌گیرد.</p>
+        <p>یادآوری مهم: پاداشِ پایتختِ <b>هر دو</b> کارت حساب می‌شود؛ پایتخت‌های A–F به قدرتِ حمله و پایتخت‌های G–L به قدرتِ دفاع اضافه می‌شوند. در پایانِ هر نبرد، «گزارش نبرد» در میدان وسط دقیقاً همین اعداد و پاداش‌ها را نشان می‌دهد.</p>
+
+        <h3>قانون مهم نبرد</h3>
+        <p>کارت مهاجم <b>هرگز</b> پس از نبرد حذف نمی‌شود. فقط کارت مدافع می‌تواند تسخیر شود، آن هم تنها وقتی مهاجم برنده شود.</p>
+
+        <h3>قانون خستگی</h3>
+        <p>وقتی یک کارت حمله می‌کند، پس از نبرد <b>خسته</b> می‌شود:</p>
+        <ul>
+          <li>کارتِ خسته دیگر نمی‌تواند به‌عنوان مهاجم انتخاب شود.</li>
+          <li>کارتِ خسته همچنان می‌تواند دفاع کند و هدفِ حملهٔ حریف قرار بگیرد.</li>
+          <li>کارت‌های خسته با کاهش شفافیت و نشانِ «خسته» مشخص می‌شوند؛ کارت‌های قابل‌حمله نشانِ «آماده» دارند.</li>
+          <li>در شروعِ نوبتِ بعدیِ همان بازیکن، همهٔ کارت‌های خسته‌اش دوباره <b>آماده</b> می‌شوند.</li>
+          <li>این قانون فقط روی <b>حمله</b> اثر دارد، نه دفاع.</li>
+        </ul>
+
+        <h3>کشورهای تسخیرشده</h3>
+        <p>کشورهای تسخیرشده در ناحیهٔ تسخیرشدهٔ بازیکن قرار می‌گیرند و در نبردهای بعدی استفاده نمی‌شوند. هر کشور تسخیرشده به سمت شرط بردِ «۱۰ کشور» حساب می‌شود.</p>
+
+        <h3>پایان بازی</h3>
+        <p>بازی بلافاصله تمام می‌شود وقتی یک بازیکن به ۱۰ امتیاز برسد، ۱۰ کشور تسخیر کند، یا دسته خالی شود و یک بازیکن کارتی در دست نداشته باشد.</p>
+        <p>اگر بازی به‌خاطر خالی شدن دسته تمام شود:</p>
+        <ul>
+          <li>بازیکن با امتیاز بیشتر برنده است.</li>
+          <li>اگر امتیازها مساوی بود، بازیکن با کشورهای تسخیرشدهٔ بیشتر برنده است.</li>
+          <li>اگر باز هم مساوی بود، بازی مساوی اعلام می‌شود.</li>
+        </ul>
+
+        <h3>شروع دوباره</h3>
+        <p>بازیکنان هر زمان می‌توانند با کلیک روی «شروع دوباره» بازی را از نو آغاز کنند.</p>
+
+        <h3>نکات راهبردی</h3>
+        <ul>
+          <li>کشورهای پرجمعیت قوی‌اند، اما پاداش منطقه می‌تواند نتیجه را عوض کند.</li>
+          <li>نگه‌داشتن چند کشور از یک منطقه پاداش‌های نبردِ قوی می‌دهد.</li>
+          <li>پایتخت‌هایی که با S–Z شروع می‌شوند ارزشمندند، چون امتیاز اضافه می‌دهند.</li>
+          <li>گاهی دفاع بهتر از حمله است، اگر مدافعِ تو پاداش‌های قوی داشته باشد.</li>
+        </ul>
+
+      </div>
+
+      <button id="rulesGotIt" class="btn btn-primary">متوجه شدم</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
